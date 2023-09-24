@@ -4,6 +4,9 @@ var util = require('../Util/utility');
 var Logger = require('../services/LoggerServices');
 var audit = require('../Audit/audit');
 var auditAction = require('../Audit/auditAction');
+var ApiError = require('../errors/api_error');
+var statusCode = require('../errors/error_status');
+var ErrorType = require('../errors/error_type');
 
 
 
@@ -29,11 +32,17 @@ exports.getBookList = async (req, res) =>{
 exports.getBookDetails = async (req, res) =>{
     try {
         var bookId = req.params.bookId;
+        console.log(bookId);
+        if(isNaN(bookId)){
+            throw new ApiError('Invalid Book Id, is not a number', statusCode.INTERNAL_SERVER_ERROR, 
+                               'Invalid Book Id, is not a number bookId value is: ' + bookId, true);
+        }
         var BookDetailsQuery = queries.queryList.GET_Book_DETAILS_QUERY;
         var result = await dbConnection.dbQuery(BookDetailsQuery, [bookId]);
         return res.status(200).send(JSON.stringify(result.rows[0]));
     } catch (error) {
-        console.log("Error: "+ error)
+        console.log("Error: "+ error.descriptipn)
+        logger.error('faild to get book details', JSON.stringify(error));
         return res.status(500).send({error: 'faild to get book details!'});
     }
 }
